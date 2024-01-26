@@ -1,0 +1,79 @@
+Refreshing token
+
+from ninja import Router
+from django.contrib.auth import authenticate
+import jwt
+
+router = Router()
+
+@router.post('/refresh-token')
+def refresh_token(request, refresh_token: str):
+    try:
+        # Verify and decode the refresh token
+        decoded_token = jwt.decode(refresh_token, secret_key, algorithms=["HS256"])
+
+        # Extract user information from the decoded refresh token
+        user_id = decoded_token['user_id']
+        username = decoded_token['username']
+
+        # Check if the user exists (you may want to add more error handling)
+        user = User.objects.get(id=user_id, username=username)
+
+        # Generate a new access token
+        access_token_payload = {
+            "user_id": user.id,
+            "username": user.username,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=15)  # New access token expiration
+        }
+        access_token = jwt.encode(access_token_payload, secret_key, algorithm="HS256")
+
+        return {"access_token": access_token}
+
+    except jwt.ExpiredSignatureError:
+        return {"detail": "Refresh token has expired."}
+    except (jwt.DecodeError, User.DoesNotExist):
+        return {"detail": "Invalid refresh token."}
+
+
+
+Check if token has expired
+
+
+def is_token_expired(token, secret_key):
+    try:
+        # Decode the token to extract its claims
+        decoded_token = jwt.decode(token, secret_key, algorithms=["HS256"])
+        
+        # Get the expiration time from the claims
+        expiration_time = decoded_token.get('exp', None)
+        
+        if expiration_time is None:
+            return False  # Token does not have an expiration time
+        
+        # Compare the expiration time with the current time
+        current_time = datetime.datetime.utcnow()
+        return current_time > datetime.datetime.fromtimestamp(expiration_time)
+    
+    except jwt.ExpiredSignatureError:
+        return True  # Token has already expired
+    
+    except (jwt.DecodeError, jwt.InvalidTokenError):
+        return True 
+
+
+
+   
+@router.get('/retrievePupils') 
+def retrieve_pupils(request):
+    users_queryset = User.objects.all()
+
+    # Initialize an empty list to store serialized user data
+    serialized_users = []
+    # Iterate through the queryset and convert each user to a dictionary
+    for user in users_queryset:
+        user_data = model_to_dict(user)
+        user_schema = UserSchema(**user_data)
+        serialized_user = user_schema.dict()
+        serialized_users.append(serialized_user)
+        
+    return serialized_users

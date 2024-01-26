@@ -1,0 +1,98 @@
+
+// Sending file from django to flutter
+
+from django.http import FileResponse
+
+@api.get("/download/")
+def download_file(request):
+    file_path = 'path/to/your/file.ext'
+    response = FileResponse(open(file_path, 'rb'))
+    return response
+
+
+// playing audio file in flutter
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^0.13.3
+  audioplayers: ^0.20.1
+
+
+  import 'dart:convert';
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
+import 'package:audioplayers/audioplayers.dart';
+
+Future<void> playAudioFromUrl(String url) async {
+  final response = await http.get(Uri.parse(url));
+  
+  if (response.statusCode == 200) {
+    Uint8List bytes = response.bodyBytes;
+    final audioPlayer = AudioPlayer();
+    audioPlayer.playBytes(bytes);
+  } else {
+    // Handle error, e.g., show an alert
+  }
+}
+
+
+
+
+
+
+
+
+
+
+def save_lesson_and_timestamp(request,filepath: UploadedFile = File(...),title: str = (...),category: str = (...),correct_answer: str = (...),choices: str = (...)):
+    
+    try:
+        
+        with transaction.atomic():
+            file_content = filepath.read()
+
+            # Create a ContentFile from the file content
+            content_file = ContentFile(file_content)
+
+            lesson, created = Lesson.objects.get_or_create(
+                title=title,
+                category=category,
+                lesson_audio=filepath,
+            )
+                        
+            model = WhisperModel("small.en", device="cpu", compute_type="int8")
+            segments, info = model.transcribe(content_file, word_timestamps=True)
+            
+            lyrics_data = []
+            
+            for segment in segments:
+                for word in segment.words:
+
+                    word_end_seconds = word.end
+
+                    # Calculate hours, minutes, and seconds
+                    hours, remainder = divmod(word_end_seconds, 3600)
+                    minutes, seconds = divmod(remainder, 60)
+
+                    # Format the result as a string in the "00:00:00" format
+                    formatted_time = "%02d:%02d:%02d" % (hours, minutes, seconds)
+                    print(formatted_time)
+                    
+
+                    try:
+                    # Try to create a new LyricsTimestamp
+                        timestamp, created = LyricsTimestamp.objects.get_or_create(
+                            lesson=lesson,
+                            timestamp=formatted_time,
+                            lyrics=word.word
+                        )
+                        
+                        lyrics_data.append({"timestamp":formatted_time,"lyrics":word.word})
+                    except IntegrityError:
+                            # If IntegrityError is raised, it means the entry already exists, so update it
+                            timestamp = LyricsTimestamp.objects.get(lesson=lesson, timestamp=formatted_time)
+                            timestamp.lyrics = word.word
+                            timestamp.save()
+            return lyrics_data      
+    except IntegrityError as e:
+        print(e) 
