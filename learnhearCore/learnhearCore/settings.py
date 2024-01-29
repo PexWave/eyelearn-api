@@ -147,30 +147,6 @@ USE_TZ = True
 
 JWT_SIGNING_KEY = 'ilyiq8!c3^g&o5q=dlx4*y89w5_^oi=_d$59iunta+j!_fa@*r'
 
-AWS_ACCESS_KEY_ID = 'AKIAYTVQSYNZL4OHVIN6'
-
-AWS_SECRET_ACCESS_KEY = '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'
-
-AWS_STORAGE_BUCKET_NAME = 'learhearapiaws'
-
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.ap-southeast-1.amazonaws.com'
-
-AWS_DEFAULT_ACL = 'public-read'
-
-AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=86400'
-}
-
-AWS_LOCATION = 'media'
-
-AWS_QUERYSTRING_AUTH = False
-
-AWS_HEADERS = {
-    'Access-Control-Allow-Origin': '*',
-}
-
-
-
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 STATIC_FILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'   
