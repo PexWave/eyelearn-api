@@ -145,8 +145,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-JWT_SIGNING_KEY = 'ilyiq8!c3^g&o5q=dlx4*y89w5_^oi=_d$59iunta+j!_fa@*r'
-
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 STATIC_FILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'   

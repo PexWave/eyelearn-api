@@ -1,26 +1,27 @@
 version: '3.7'
 
 services:
-  django_gunicorn:
+  learnhear:
     volumes:
-      - static:/static
+      - learnhearCore:/learnhearCore
     env_file:
       - file.env
     build:
       context: .
     ports:
       - "8001:8001"
-
-
-  nginx:
-    build: ./nginx
-    volumes:
-      - static:/static
-    ports:
-      - "80:80"
     depends_on:
-      - django_gunicorn
+      - postgres
 
+  postgres:
+    image: postgres:latest
+    container_name: learnhearpostgres
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: learhear4$
+    ports:
+      - "5432:5432"
 
 volumes:
-  static:
+  learnhearCore:

@@ -1,5 +1,5 @@
 # Use a base image that includes Python (e.g., python:3.11-bullseye)
-FROM python:3.11-bullseye
+FROM python:3.10-bullseye
 
 # Copy your application code
 COPY ./learnhearCore /learnhearCore
