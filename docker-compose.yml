@@ -5,7 +5,7 @@ services:
     volumes:
       - learnhearCore:/learnhearCore
     env_file:
-      - file.env
+      - envfile.env
     build:
       context: .
     ports:
