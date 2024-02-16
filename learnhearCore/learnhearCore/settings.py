@@ -13,6 +13,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -91,14 +96,13 @@ CSRF_TRUSTED_ORIGINS=['https://*.ngrok-free.app']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'learhear4$',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME', ''),
+        'USER': os.getenv('DB_USER', ''),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', ''),
     }
 }
-
 
 WSGI_APPLICATION = 'learnhearCore.wsgi.application'
 ASGI_APPLICATION = 'learnhearCore.asgi.application'
@@ -133,6 +137,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+JWT_SIGNING_KEY = os.getenv('JWT_SIGNING_KEY')
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -153,7 +159,7 @@ STATIC_FILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+MEDIA_URL = f'https://{os.getenv("AWS_S3_CUSTOM_DOMAIN")}/media/'
 
 STATIC_ROOT = '/static/'
 
