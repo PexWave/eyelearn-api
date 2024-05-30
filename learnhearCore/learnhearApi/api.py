@@ -37,8 +37,8 @@ class BasicAuth(HttpBasicAuth):
 @router.post('/sythesize/')
 def synthesize(request, text: str = (...)):
     polly_client = boto3.Session(
-                    aws_access_key_id="AKIAYTVQSYNZL4OHVIN6",                     
-        aws_secret_access_key="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",
+                    aws_access_key_id="",                     
+        aws_secret_access_key="",
         region_name='us-east-1').client('polly')
     
     response = polly_client.synthesize_speech(VoiceId='Joanna',
