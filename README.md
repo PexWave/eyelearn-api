@@ -24,7 +24,6 @@ Eyelhearn is a modern and efficient backend API built using Django Ninja for hig
 - Python 3.8+
 - Django
 - AWS credentials for Amazon Polly
-- OpenAI API key for Whisper
 
 ### Installation
 
