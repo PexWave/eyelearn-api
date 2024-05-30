@@ -47,7 +47,6 @@ Eyelhearn is a modern and efficient backend API built using Django Ninja for hig
     ```env
     AWS_ACCESS_KEY_ID=your_aws_access_key_id
     AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
-    OPENAI_API_KEY=your_openai_api_key
     ```
 
 4. **Run Migrations**:
