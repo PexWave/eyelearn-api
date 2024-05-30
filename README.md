@@ -1,6 +1,3 @@
-Sure! Here's an improved and more detailed GitHub repository description for your Django Ninja API project:
-
----
 
 # Eyelhearn - Fast Backend API with Django Ninja
 
