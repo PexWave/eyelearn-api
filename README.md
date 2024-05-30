@@ -66,14 +66,6 @@ Eyelhearn is a modern and efficient backend API built using Django Ninja for hig
 - **Text-to-Speech**: Send text to the API, which utilizes Amazon Polly to convert it to speech.
 - **Voice Commands**: Use Whisper to transcribe voice commands sent from the client, allowing navigation through the app.
 
-## Contributing
-
-We welcome contributions! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on the process of submitting pull requests.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
 ---
 
-Feel free to customize further based on your project's specifics and preferences!
