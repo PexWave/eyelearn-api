@@ -33,7 +33,7 @@ Eyelhearn is a modern and efficient backend API built using Django Ninja for hig
 
 1. **Clone the Repository**:
     ```bash
-    git clone https://github.com/yourusername/eyelhearn.git
+    git clone https://github.com/pexwave/eyelhearn.git
     cd eyelhearn
     ```
 
