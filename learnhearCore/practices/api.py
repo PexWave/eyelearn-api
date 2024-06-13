@@ -62,7 +62,6 @@ def get_intonationPractices(request):
                             "practice_lyrics": lyric_data,
                             "category":practice.category,})
       
-    print(practice_list)
     return practice_list
 
 
@@ -72,8 +71,7 @@ def check(request,recorded_audio: UploadedFile = File(...)):
     file_path = BytesIO(recorded_audio.read())
     
     model = WhisperModel("small.en", device="cpu", compute_type="int8")
-    # pipe = pipeline("automatic-speech-recognition", model="openai/whisper-small", chunk_length_s=30, device=device)
-    # prediction = pipe(file_path, batch_size=8)["text"]
+
     segments, info = model.transcribe(file_path, beam_size=5)
 
     commands = [
@@ -107,8 +105,7 @@ def intonation_check(request, form: PracticeForm = Form(...), recorded_audio: Up
     intonation = Practice.objects.get(category="intonation",item_number=form.item_number)
     
     model = WhisperModel("small.en", device="cuda", compute_type="int8_float16")
-    # pipe = pipeline("automatic-speech-recognition", model="openai/whisper-small", chunk_length_s=30, device=device)
-    # prediction = pipe(file_path, batch_size=8)["text"]
+
     segments, info = model.transcribe(file_path, beam_size=5)
 
     for segment in segments:
@@ -143,7 +140,7 @@ def retrieve_practices_helper(category,title):
             "id": practice.id,
             "title": practice.title,
             "choices": practice.choices,
-            "lesson_audio": practice.practice_audio.url if practice.practice_audio else None,  # Assuming 'lesson_audio' is a FileField
+            "lesson_audio": practice.practice_audio.url if practice.practice_audio else None,
             "lesson_image": practice_data,
             "lesson_lyrics": lyric_data,
             "category": practice.category,
@@ -203,21 +200,14 @@ def check_answer(request, form: PracticeForm = Form(...), recorded_audio: Upload
                         print("Invalid answer format - Multiple occurrences of the same valid answer")
                         break
                     seen_valid_answers.add(word.replace('.', ''))
-                else:
-                    # Check if the correct answer is among the seen valid answers
-                    if practice.correct_answer.lower() in seen_valid_answers:
-                        print("Correct!!!!")
-                        print(practice.correct_answer.lower().strip())
-                        pupil_record.score += 1
-                        pupil_record.save()
                     else:
-                        print("Incorrect")
-                        print(seen_valid_answers)
-                        print(practice.correct_answer.lower().strip())
-                
+                        # Check if the correct answer is among the seen valid answers
+                        if practice.correct_answer.lower() in seen_valid_answers:
+                            pupil_record.score += 1
+                            pupil_record.save()
+
 
                 
-                print(pupil_record.score)
             return {
                 "score":pupil_record.score,
                 "answer":form_answer.split()
@@ -252,36 +242,3 @@ def check_spelling(form, recorded_audio, model, practice, pupil_record):
             "answer":form_answer.split()
                 }
             
-
-
-# @router.post('/is_new_user/')
-# def check_user(request,recorded_audio: UploadedFile = File(...)):
-    
-    file_path = BytesIO(recorded_audio.read())
-    
-    model = WhisperModel("small.en", device="cpu", compute_type="int8")
-    # pipe = pipeline("automatic-speech-recognition", model="openai/whisper-small", chunk_length_s=30, device=device)
-    # prediction = pipe(file_path, batch_size=8)["text"]
-    segments, info = model.transcribe(file_path, beam_size=5)
-
-
-    commands = [
-            "practice",
-            "grammar", "intonation", "listening comprehension",
-            "oral", "vocabulary",
-            "noun","pronoun","adjective","verb",
-            "main menu", "back"
-            ]
-
-    for segment in segments:
-        command = segment.text.lower().strip()
-        
-        # Search for a command contained within the segment
-        print(command)
-        for cmd in commands:
-            if cmd in command:
-                print(cmd)
-                return {"command": cmd}
-
-    # If loop completes without returning, then none of the segments contained a command
-    return {"command": "none"}  

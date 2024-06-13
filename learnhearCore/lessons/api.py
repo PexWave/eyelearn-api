@@ -80,8 +80,7 @@ def lesson_confirmation(request,recorded_audio: UploadedFile = File(...)):
     file_path = BytesIO(recorded_audio.read())
     
     model = WhisperModel("small.en", device="cpu", compute_type="int8")
-    # pipe = pipeline("automatic-speech-recognition", model="openai/whisper-small", chunk_length_s=30, device=device)
-    # prediction = pipe(file_path, batch_size=8)["text"]
+
     segments, info = model.transcribe(file_path, beam_size=5)
 
 

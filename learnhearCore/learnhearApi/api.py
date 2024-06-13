@@ -24,6 +24,7 @@ from asgiref.sync import sync_to_async
 from django.http import StreamingHttpResponse
 import boto3
 import os
+from django.conf import settings
 
 router = Router()
 
@@ -37,9 +38,9 @@ class BasicAuth(HttpBasicAuth):
 @router.post('/sythesize/')
 def synthesize(request, text: str = (...)):
     polly_client = boto3.Session(
-                    aws_access_key_id="",                     
-        aws_secret_access_key="",
-        region_name='us-east-1').client('polly')
+                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,                     
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.REGION_NAME).client('polly')
     
     response = polly_client.synthesize_speech(VoiceId='Joanna',
                 OutputFormat='mp3', 
@@ -103,9 +104,6 @@ def save_lesson_and_timestamp(request,filepath: UploadedFile = File(...),title: 
                 correct_answer=correct_answer
             )
             
-            # choices_objects = [PracticeQuestionChoice(practice=practice, choices=choice) for choice in choices]
-            # PracticeQuestionChoice.objects.bulk_create(choices_objects)
-
                         
             model = WhisperModel("small.en", device="cpu", compute_type="int8")
             segments, info = model.transcribe(content_file, word_timestamps=True)
@@ -157,100 +155,3 @@ async def generate_tts_audio(text, speaker_wav, language, emotion, speed, filepa
     
     return filepath
             
-@router.get('/')
-async def list_events(request):
-
-    # generate speech by cloning a voice using default settings
-    
-    long_string = """
-What are nouns?
-
-Nouns are words that name people, places, animals, or things. They are like the building blocks of a sentence. Without nouns, we would not be able to say anything about the world around us.
-
-Examples of nouns:
-
-People: John, Mary, teacher, doctor, firefighter
-Places: City, country, park, zoo, school
-Animals: Dog, cat, fish, bird, snake
-Things: Car, tree, book, pencil, toy
-How are nouns used in a sentence?
-
-Nouns can be used in a variety of ways in a sentence. They can be the subject, object, or complement of a verb. For example:
-
-Subject: The dog barked loudly.
-Object: I saw a cat on the roof.
-Complement: The tree is very tall.
-Here are some other examples of how nouns are used in a sentence:
-
-The boy is playing with his toy.
-The girl is eating an apple.
-The bird is singing in the tree.
-The car is driving down the street.
-The house has a biggarden.
-    """
-    
-
-    filepath = await generate_tts_audio(long_string, "C:/Users/NITRO 5/Desktop/wavfiles/speaker/Ayeen_Pineda.mp3", "en", "Happy", 0.5, "C:/Users/NITRO 5/Desktop/wavfiles/lesson-noun-l1.wav")
-    
-    
-    await save_lesson_and_timestamp(filepath,"noun-1","grammar")
-
-    return [
-        "hello",
-        
-    ]
-    # generate speech by cloning a voice using custom settings
-    # tts.tts_to_file(text="It took me quite a long time to develop a voice, and now that I have it I'm not going to be silent.",
-    #                 file_path="output.wav",
-    #                 speaker_wav="/path/to/target/speaker.wav",
-    #                 language="en",
-    #                 decoder_iterations=30)
-# def list_events(request):
-#      # Possibly needed if there's a rate limit on calls to Suno Bark
-
-#     preload_models(
-#     text_use_small=True,
-#     coarse_use_small=True,
-#     fine_use_gpu=False,
-#     fine_use_small=True,
-# )
-#     # Step 1: Text Segmentation
-#     long_string = """
-#  Noun is part of speech that comprise words that are used to name person, places, animals and things. What are nouns used for? They are used for naming a person, places, animals and things.
-# """
-
-    # sentences = nltk.sent_tokenize(long_string)
-
-    # # Set up sample rate
-    # SAMPLE_RATE = 22050
-    # HISTORY_PROMPT = "v2/en_speaker_9"
-
-    # chunks = ['']
-    # token_counter = 0
-
-    # for sentence in sentences:
-    #     current_tokens = len(nltk.Text(sentence))
-    #     if token_counter + current_tokens <= 250:
-    #         token_counter = token_counter + current_tokens
-    #         chunks[-1] = chunks[-1] + " " + sentence
-    #     else:
-    #         chunks.append(sentence)
-    #         token_counter = current_tokens
-
-    # # Generate audio for each prompt
-    # audio_arrays = []
-    # for prompt in chunks:
-    #     audio_array = generate_audio(prompt,history_prompt=HISTORY_PROMPT)
-    #     audio_arrays.append(audio_array)
-
-    # # Combine the audio files
-    # combined_audio = np.concatenate(audio_arrays)
-
-    # write_wav("C:/Users/NITRO 5/Desktop/wavfiles/lesson-Grammar-noun-l1.wav", SAMPLE_RATE, combined_audio)
-
-
-
-@router.get('/sample')
-def event_details(request, event_id: int):
-    event = Event.objects.get(id=event_id)
-    return {"title": event.title, "details": event.details}

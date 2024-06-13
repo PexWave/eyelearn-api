@@ -96,3 +96,101 @@ def save_lesson_and_timestamp(request,filepath: UploadedFile = File(...),title: 
             return lyrics_data      
     except IntegrityError as e:
         print(e) 
+
+
+
+
+
+
+
+@router.get('/')
+async def list_events(request):
+
+    # generate speech by cloning a voice using default settings
+    
+    long_string = """
+What are nouns?
+
+Nouns are words that name people, places, animals, or things. They are like the building blocks of a sentence. Without nouns, we would not be able to say anything about the world around us.
+
+Examples of nouns:
+
+People: John, Mary, teacher, doctor, firefighter
+Places: City, country, park, zoo, school
+Animals: Dog, cat, fish, bird, snake
+Things: Car, tree, book, pencil, toy
+How are nouns used in a sentence?
+
+Nouns can be used in a variety of ways in a sentence. They can be the subject, object, or complement of a verb. For example:
+
+Subject: The dog barked loudly.
+Object: I saw a cat on the roof.
+Complement: The tree is very tall.
+Here are some other examples of how nouns are used in a sentence:
+
+The boy is playing with his toy.
+The girl is eating an apple.
+The bird is singing in the tree.
+The car is driving down the street.
+The house has a biggarden.
+    """
+    
+
+    filepath = await generate_tts_audio(long_string, "C:/Users/NITRO 5/Desktop/wavfiles/speaker/Ayeen_Pineda.mp3", "en", "Happy", 0.5, "C:/Users/NITRO 5/Desktop/wavfiles/lesson-noun-l1.wav")
+    
+    
+    await save_lesson_and_timestamp(filepath,"noun-1","grammar")
+
+    return [
+        "hello",
+        
+    ]
+    # generate speech by cloning a voice using custom settings
+    # tts.tts_to_file(text="It took me quite a long time to develop a voice, and now that I have it I'm not going to be silent.",
+    #                 file_path="output.wav",
+    #                 speaker_wav="/path/to/target/speaker.wav",
+    #                 language="en",
+    #                 decoder_iterations=30)
+# def list_events(request):
+#      # Possibly needed if there's a rate limit on calls to Suno Bark
+
+#     preload_models(
+#     text_use_small=True,
+#     coarse_use_small=True,
+#     fine_use_gpu=False,
+#     fine_use_small=True,
+# )
+#     # Step 1: Text Segmentation
+#     long_string = """
+#  Noun is part of speech that comprise words that are used to name person, places, animals and things. What are nouns used for? They are used for naming a person, places, animals and things.
+# """
+
+    # sentences = nltk.sent_tokenize(long_string)
+
+    # # Set up sample rate
+    # SAMPLE_RATE = 22050
+    # HISTORY_PROMPT = "v2/en_speaker_9"
+
+    # chunks = ['']
+    # token_counter = 0
+
+    # for sentence in sentences:
+    #     current_tokens = len(nltk.Text(sentence))
+    #     if token_counter + current_tokens <= 250:
+    #         token_counter = token_counter + current_tokens
+    #         chunks[-1] = chunks[-1] + " " + sentence
+    #     else:
+    #         chunks.append(sentence)
+    #         token_counter = current_tokens
+
+    # # Generate audio for each prompt
+    # audio_arrays = []
+    # for prompt in chunks:
+    #     audio_array = generate_audio(prompt,history_prompt=HISTORY_PROMPT)
+    #     audio_arrays.append(audio_array)
+
+    # # Combine the audio files
+    # combined_audio = np.concatenate(audio_arrays)
+
+    # write_wav("C:/Users/NITRO 5/Desktop/wavfiles/lesson-Grammar-noun-l1.wav", SAMPLE_RATE, combined_audio)
+
