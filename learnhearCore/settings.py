@@ -96,12 +96,23 @@ CSRF_TRUSTED_ORIGINS=['https://*.ngrok-free.app']
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 # Replace the SQLite DATABASES configuration with PostgreSQL:
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         # Replace this value with your local database's connection string.
+#         default=os.getenv("RENDER_DATABASE_URL"),
+#         conn_max_age=600
+#     )
+# }
+
 DATABASES = {
-    'default': dj_database_url.config(
-        # Replace this value with your local database's connection string.
-        default=os.getenv("RENDER_DATABASE_URL"),
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.getenv('DB_NAME', ''),
+        'USER': os.getenv('DB_USER', ''),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', ''),
+    }
 }
 
 WSGI_APPLICATION = 'learnhearCore.wsgi.application'
