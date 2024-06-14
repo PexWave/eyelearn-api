@@ -1,0 +1,8 @@
+*.pem
+*.env
+*.ini
+venv
+mydatabase*
+uploaded_files
+*.json
+*.sqlite3
