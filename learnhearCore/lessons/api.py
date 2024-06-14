@@ -14,7 +14,6 @@ from typing import Generic, TypeVar
 from ninja import Router, Form, Schema
 from tempfile import gettempdir
 from io import BytesIO
-from transformers import pipeline
 import asyncio
 from faster_whisper import WhisperModel
 User = get_user_model()

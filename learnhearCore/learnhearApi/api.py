@@ -1,16 +1,6 @@
 from ninja.security import HttpBasicAuth
 from ninja import Router
-from TTS.api import TTS
-from transformers import pipeline
-import asyncio
 from faster_whisper import WhisperModel
-from bark import SAMPLE_RATE, generate_audio, preload_models
-from scipy.io.wavfile import write as write_wav
-from IPython.display import Audio
-import time 
-import numpy as np
-import nltk
-from nltk.tokenize import sent_tokenize
 from lessons.models import Lesson, LyricsTimestamp
 from practices.models import *
 from django.db import IntegrityError, transaction
@@ -25,81 +15,100 @@ from django.http import StreamingHttpResponse
 import boto3
 import os
 from django.conf import settings
-
+from botocore.exceptions import BotoCoreError, ClientError
+from contextlib import closing
+import sys
+import subprocess
+from tempfile import gettempdir
 router = Router()
 
-class BasicAuth(HttpBasicAuth):
-    def authenticate(self, request, username, password):
-        if username == "admin" and password == "secret":
-            return username
-          
+class CustomException(Exception):
+    def __init__(self, message, error_code=None):
+        super().__init__(message)
+        self.error_code = error_code
+
+    def __str__(self):
+        return f"{super().__str__()} (Error code: {self.error_code})"
+
+
+def synthesize_text(text):
+
+    session = boto3.session.Session(
+    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    aws_session_token=settings.AWS_SESSION_TOKEN,
+    )
+
+    polly = session.client("polly")
+
+    response = polly.synthesize_speech(
+    TextType="ssml",  # Specify text type as SSML
+    Text=text,        
+     OutputFormat="mp3",
+    VoiceId="Brian")
+
+
+    # Access the audio stream from the response
+    if "AudioStream" in response:
+        # Note: Closing the stream is important because the service throttles on the
+        # number of parallel connections. Here we are using contextlib.closing to
+        # ensure the close method of the stream object will be called automatically
+        # at the end of the with statement's scope.
+            with closing(response["AudioStream"]) as stream:
+                output = os.path.join(gettempdir(), "speech.mp3")
+                try:
+                    # Open a file for writing the output as a binary stream
+                        with open(output, "wb") as file:
+                            file.write(stream.read())
+                        
+                        return output
+                except IOError as error:
+                    # Could not write to file, exit gracefully
+                    print(error)
+                    raise CustomException("Could not write to file, exit gracefully")
+
+    else:
+        # The response didn't contain audio data, exit gracefully
+        print("Could not stream audio")
+        sys.exit(-1)
+        
+
 
 
 @router.post('/sythesize/')
-def synthesize(request, text: str = (...)):
-    polly_client = boto3.Session(
-                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,                     
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=settings.REGION_NAME).client('polly')
-    
-    response = polly_client.synthesize_speech(VoiceId='Joanna',
-                OutputFormat='mp3', 
-                Text = 'This is a sample text to be synthesized.',
-                Engine = 'neural')
+def synthesize(request, text: str = (...), title: str = (...),word: str = (...),category: str = (...),correct_answer: str = (...),choice: str = (...)):
 
-    # Get the audio stream
-    audio_bytes = response['AudioStream'].read()
+    if variant == "Practice":
+        transcribe_audio_and_timestamp(title, category, output, choice, correct_answer)
 
-    # Return the raw audio bytes as a streaming response
-    response = StreamingHttpResponse(
-        streaming_content=(chunk for chunk in iter(lambda: audio_bytes, b""))
-    )
-    response['Content-Type'] = 'audio/mpeg'
+    else:
+        transcribe_audio_and_timestamp(title, category, output, choice, correct_answer)
+
+    # Play the audio using the platform's default player
+    # if sys.platform == "win32":
+    #     os.startfile(output)
+    # else:
+    #     # The following works on macOS and Linux. (Darwin = mac, xdg-open = linux).
+    #     opener = "open" if sys.platform == "darwin" else "xdg-open"
+    #     subprocess.call([opener, output])
     return response
     
 
 
 
-def chunk_text(text, max_chars):
-    """
-    Chunks the text based on sentences using nltk and a character limit.
-    """
-    sentences = sent_tokenize(text)
-    
-    current_chunk = ""
-    chunks = []
-    
-    for sentence in sentences:
-        if len(current_chunk) + len(sentence) > max_chars:
-            # Current chunk will exceed the limit if we add this sentence.
-            # Save current chunk and start a new one.
-            chunks.append(current_chunk.strip())
-            current_chunk = ""
 
-        current_chunk += " " + sentence
-
-    # Add the last chunk if it's not empty
-    if current_chunk:
-        chunks.append(current_chunk.strip())
-
-    return chunks
-
-
-@router.post('/upload/')
-def save_lesson_and_timestamp(request,filepath: UploadedFile = File(...),title: str = (...),word: str = (...),category: str = (...),correct_answer: str = (...),choice: str = (...)):
+def transcribe_audio_and_timestamp(title, category, output, choice, correct_answer, variants):
     
     try:
         
         with transaction.atomic():
-            file_content = filepath.read()
 
-            # Create a ContentFile from the file content
-            content_file = ContentFile(file_content)
+            content_file = ContentFile(open(output, "rb").read(), name="audio.mp3")
 
             practice, created = Practice.objects.get_or_create(
                 title=title,
                 category=category,
-                practice_audio=filepath,
+                practice_audio=content_file,
                 choices=choice,
                 correct_answer=correct_answer
             )
@@ -144,14 +153,28 @@ def save_lesson_and_timestamp(request,filepath: UploadedFile = File(...),title: 
     except IntegrityError as e:
         print(e) 
         
-async def generate_tts_audio(text, speaker_wav, language, emotion, speed, filepath):
-    tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=True)
-    tts.tts_to_file(text=text,
-                   file_path=filepath,
-                   speaker_wav=speaker_wav,
-                   language=language,
-                   emotion=emotion,
-                   speed=speed)
+
+
+def chunk_text(text, max_chars):
+    """
+    Chunks the text based on sentences using nltk and a character limit.
+    """
+    sentences = sent_tokenize(text)
     
-    return filepath
-            
+    current_chunk = ""
+    chunks = []
+    
+    for sentence in sentences:
+        if len(current_chunk) + len(sentence) > max_chars:
+            # Current chunk will exceed the limit if we add this sentence.
+            # Save current chunk and start a new one.
+            chunks.append(current_chunk.strip())
+            current_chunk = ""
+
+        current_chunk += " " + sentence
+
+    # Add the last chunk if it's not empty
+    if current_chunk:
+        chunks.append(current_chunk.strip())
+
+    return chunks

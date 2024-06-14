@@ -4,9 +4,6 @@ from bark import SAMPLE_RATE, generate_audio, preload_models
 from scipy.io.wavfile import write as write_wav
 from IPython.display import Audio
 import time 
-import nltk
-from nltk.tokenize import sent_tokenize
-
 
 
 import os
@@ -120,7 +117,6 @@ def whisper(request):
 
 def grammar(request):
     
-    from transformers import pipeline
 
     corrector = pipeline(
                 'text2text-generation',
@@ -134,7 +130,6 @@ def grammar(request):
 
 def comprehension(request):
     
-    from transformers import pipeline
     question_answerer = pipeline("question-answering", model='distilbert-base-cased-distilled-squad')
 
     context = r"""

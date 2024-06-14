@@ -20,7 +20,6 @@ from ninja import Router, Form, Schema
 from django.db import transaction
 import numpy as np
 import os
-import torch
 from boto3 import Session
 from botocore.exceptions import BotoCoreError, ClientError
 from contextlib import closing
@@ -28,7 +27,6 @@ import sys
 import subprocess
 from tempfile import gettempdir
 from io import BytesIO
-from transformers import pipeline
 import asyncio
 from faster_whisper import WhisperModel
 User = get_user_model()
@@ -200,7 +198,7 @@ def check_answer(request, form: PracticeForm = Form(...), recorded_audio: Upload
                         print("Invalid answer format - Multiple occurrences of the same valid answer")
                         break
                     seen_valid_answers.add(word.replace('.', ''))
-                    else:
+                else:
                         # Check if the correct answer is among the seen valid answers
                         if practice.correct_answer.lower() in seen_valid_answers:
                             pupil_record.score += 1
